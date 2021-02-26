@@ -19,7 +19,7 @@ public class View {
 		
 		JFrame.setDefaultLookAndFeelDecorated(true);
     JFrame frame = new JFrame("PDA Processor");
-		frame.setPreferredSize(new Dimension(350,300));
+		frame.setPreferredSize(new Dimension(150,100));
 		frame.setLocation(100, 100);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -28,11 +28,10 @@ public class View {
 		JOptionPane pane = new JOptionPane();
 		
     JButton readButton = new JButton("Open File");
-		Controller controller = new Controller(fc, frame, tarea, pane);
+		Controller controller = new Controller(fc, frame, pane);
     readButton.addActionListener(controller);
-
-    frame.getContentPane().add(tarea, BorderLayout.CENTER);
-    frame.getContentPane().add(readButton, BorderLayout.PAGE_END);
+		
+		frame.getContentPane().add(readButton, BorderLayout.PAGE_END);
     frame.pack();
     frame.setVisible(true);
 	}

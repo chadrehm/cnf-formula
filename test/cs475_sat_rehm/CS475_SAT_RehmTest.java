@@ -7,6 +7,9 @@ package cs475_sat_rehm;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -15,21 +18,22 @@ import static org.junit.Assert.*;
  * @author Chad Rehm
  */
 public class CS475_SAT_RehmTest {
+	JFileChooser fc;
+	JFrame frame;
+	JOptionPane pane;
+	Assignment assignment;
+	CnfFormula cnfFormula;
 	
 	public CS475_SAT_RehmTest() {
 	}
 
 	@Test
 	public void test_setClauses() {
-		CnfFormula cnfFormula = new CnfFormula();
+		Controller controller = new Controller(fc, frame, pane);
 		
-		cnfFormula.setClauses(new ArrayList<>(Arrays.asList(
-			" (x1 v x3 v x4) ",
-			" (nx1 v x3) ",
-			" (nx1 v x4 v nx2) ",
-			" nx3 ", 
-			" (x2 v nx4) "
-		)));
+		controller.parseCnfFormulaInput("(x1 v x3 v x4) ^ (nx1 v x3) ^ " +
+			"(nx1 v x4 v nx2) ^ nx3 ^ (x2 v nx4) ");
 		
+		controller.satisfiable();
 	}
 }

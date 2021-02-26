@@ -6,9 +6,6 @@
 package cs475_sat_rehm;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -21,39 +18,21 @@ public class CnfFormula {
 		clauses = new ArrayList<>();
 	}
 	
-	public void setClauses(ArrayList<String> clausesStrList) {
-		List<Clause> clausesList = clausesStrList.stream().map(clauseStr -> {
-			
-			List<Literal> list = Arrays.asList(
-				clauseStr.replaceAll("[()\\s]", "").split("v")).stream().map(literalStr -> {
-					Literal literal = new Literal();
-					
-					boolean isNegative = literalStr.startsWith("n");
-					if (isNegative) {
-						literalStr = literalStr.substring(1);
-					}
-					
-					literal.setName(literalStr);
-					literal.setIsNegated(isNegative);
-					
-					return literal;
-				}).collect(Collectors.toList());
-			
-			Clause clause = new Clause(new ArrayList<>(list));
-			
-			return clause;
-		}).collect(Collectors.toList());
-		
-		this.clauses = new ArrayList<>(clausesList);
+	public void setClauses(ArrayList<Clause> clauses) {
+		this.clauses = clauses;
 	}
-	
-	public String[] literals() {
-		return new String[1];
-	}
-
 	
 	public boolean verify(Assignment assignment) {
-		return true;
+		boolean verified = true;
+		
+		for(Clause clause : clauses) {
+			if(!clause.verify(assignment)) {
+				verified = false;
+				break;
+			}
+		}
+		
+		return verified;
 	}
 	
 }

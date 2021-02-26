@@ -14,23 +14,26 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JTextArea;
 
 public class Controller implements ActionListener{
 	JFileChooser fc;
 	JFrame frame;
-	JTextArea  tarea;
 	JOptionPane pane;
+	Assignment assignment;
+	CnfFormula cnfFormula;
 	
-	Controller(JFileChooser fc, JFrame frame, JTextArea  tarea, JOptionPane pane) {
-		this.tarea = tarea;
+	Controller(JFileChooser fc, JFrame frame, JOptionPane pane) {
 		this.frame = frame;
 		this.fc = fc;
 		this.pane = pane;
+		assignment = new Assignment();
+		cnfFormula = new CnfFormula();
 	}
 
 	@Override
@@ -46,23 +49,58 @@ public class Controller implements ActionListener{
 	
 	/**
 	 * After file is selected prompt user for input string, process input and
-	 * display results to users.  Prompt user for additional input strings
+	 * display results to users.  Prompt user for additional assignments
 	 */
 	public void handleAction() {
-		String inputString = promptInput();
-		if (inputString != null) {	
-			
-		} else {
-			pane.showMessageDialog(frame, "An input is required.");
-		}
 		
+		promptAssignment();
+		boolean verified = cnfFormula.verify(assignment);
+		showVerified(verified);
+
 		String userContinue = promptContinue();
-		
 		if (userContinue != null && !userContinue.equals("n")) {
 			handleAction();
 		} else {
+			satisfiable();
 			System.exit(1);
 		}
+	}
+	
+	public void satisfiable() {
+		boolean verified;
+		String[] variables = assignment.getVariables();
+		int numberVariables = variables.length;
+		int assignmentCount = (int)Math.pow(2, numberVariables);
+		
+		for (int idx = 0; idx < assignmentCount; idx++) {
+			StringBuilder psudoAssignmentSB = 
+				new StringBuilder(Integer.toBinaryString(idx)).reverse();
+			
+			String psudoAssignment = padRightZeros(psudoAssignmentSB, numberVariables);
+			
+			String [] assignmentValues = psudoAssignment.split("");
+			
+			for (int index = 0; index < numberVariables; index++) {
+				assignment.setValue(variables[index], assignmentValues[index].equals("1"));
+			}
+			
+			verified = cnfFormula.verify(assignment);
+			if(verified) {
+				System.out.println("Verified with " + psudoAssignment);
+			}
+			
+		}
+	}
+	
+	private String padRightZeros(StringBuilder inputString, int length) {
+    if (inputString.length() >= length) {
+        return inputString.toString();
+    }
+    while (inputString.length() < length) {
+        inputString.append('0');
+    }
+
+    return inputString.toString();
 	}
 	
 	/**
@@ -71,7 +109,6 @@ public class Controller implements ActionListener{
 	 */
 	public void readFile(File file){
 		String cnfFormulaString = null;
-		CnfFormula cnfFormula = new CnfFormula();
 
 		try {
 			BufferedReader brTest = new BufferedReader(new FileReader(file));
@@ -84,17 +121,52 @@ public class Controller implements ActionListener{
 		}
 
 		if(cnfFormulaString != null) {
-			cnfFormula.setClauses(
-				new ArrayList<>(Arrays.asList(cnfFormulaString.split("\\^"))));
+			parseCnfFormulaInput(cnfFormulaString);
 		};
 	}
 	
-	/**
-	 * Open prompt and return input string
-	 * @return
-	 */
-	public String promptInput() {
-		return pane.showInputDialog(frame, "Enter input string.");
+	protected void parseCnfFormulaInput(String cnfFormulaString) {
+		HashSet<String> variablesSet = new HashSet<>();
+		
+		// Parse cnf formula and variables
+		// Split user input on ^ to divide clauses
+		List<Clause> clauses = Arrays.asList(cnfFormulaString.split("\\^"))
+			.stream().map(clauseStr -> {
+
+			// Remove parentheses and space and split on v to divide literals
+			List<Literal> list = Arrays.asList(
+				clauseStr.replaceAll("[()\\s]", "").split("v")).stream().map(literalStr -> {
+					Literal literal = new Literal();
+
+					// Nagation values start with an "n", remove after read.
+					boolean isNegative = literalStr.startsWith("n");
+					if (isNegative) {
+						literalStr = literalStr.substring(1);
+					}
+
+					// Populate Literal and Variable set.
+					literal.setName(literalStr);
+					variablesSet.add(literalStr);
+					literal.setIsNegated(isNegative);
+
+					return literal;
+				}).collect(Collectors.toList());
+
+			Clause clause = new Clause(new ArrayList<>(list));
+
+			return clause;
+		}).collect(Collectors.toList());
+
+		cnfFormula.setClauses( new ArrayList<>(clauses));
+
+		String[] variables = new String[variablesSet.size()];
+		assignment.setVariables(variablesSet.toArray(variables));
+	} 
+
+	private void promptAssignment() {
+		AssignmentView view = new AssignmentView();
+		view.setModel(assignment);
+		view.setVisible(true);
 	}
 	
 	/**
@@ -102,6 +174,12 @@ public class Controller implements ActionListener{
 	 * @return
 	 */
 	public String promptContinue() {
-		return pane.showInputDialog(frame, "Enter another string? (type n to exit)");
+		return pane.showInputDialog(frame, "Try another assignment?\n"
+			+ "Type n to find if formula is satisfiable and exit.");
+	}
+	
+	public void showVerified(boolean verified) {
+		pane.showMessageDialog(frame, String.format("The assignment was %sverified.",
+			verified ? "" : "not "));
 	}
 }

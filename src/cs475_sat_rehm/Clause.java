@@ -6,6 +6,7 @@
 package cs475_sat_rehm;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -19,7 +20,20 @@ public class Clause {
 	}
 	
 	public boolean verify(Assignment assignment) {
-		return true;
+		boolean verified = false;
+		
+		for(Literal literal : literals) {
+			boolean value = literal.isIsNegated() 
+				? !assignment.getValue(literal.getName()) 
+				: assignment.getValue(literal.getName());
+			
+			if (value) {
+				verified = true;
+				break;
+			}
+		}
+			
+		return verified;
 	}
 	
 	public String[] literals() {
