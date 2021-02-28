@@ -48,7 +48,7 @@ public class Controller implements ActionListener{
 	}
 	
 	/**
-	 * After file is selected prompt user for input string, process input and
+	 * After file is selected prompt user for an assignment, process input and
 	 * display results to users.  Prompt user for additional assignments
 	 */
 	public void handleAction() {
@@ -61,22 +61,41 @@ public class Controller implements ActionListener{
 		if (userContinue != null && !userContinue.equals("n")) {
 			handleAction();
 		} else {
-			satisfiable();
+			String isSatisfiable = satisfiable();
+			showSatisfiable(isSatisfiable);
+			
 			System.exit(1);
 		}
 	}
 	
-	public void satisfiable() {
+	/**
+	 * return the first binary input that will satisfy the cnf formula or null.
+	 * This method has a O(2^n).  For every variable the set of assignments that could
+	 * be checked grows 2^n and each assignment has an O(n^2) running time.  Verifying
+	 * assignment m with clauses x:
+	 *	1. loop over the assignment count which is 2 to the number of variables.
+	 *		2. build a list of binary inputs to simulate the assignment.
+	 *    3. crate the assignment.
+	 * 4. loop on every assignment n to check the cnf formula.
+	 *		5. call "verify" on each m which will also loop on every x. this step is O(m^2)
+	 *			6. return "true" or "false" from x verify.
+	 *		7. if one x returns false reject.
+	 *		8. if all m are verified to be true accept.
+	 * 9. if one assignment is found to accept the the cnf formula is satisfiable.
+	 * @return
+	 */
+	public String satisfiable() {
 		boolean verified;
 		String[] variables = assignment.getVariables();
 		int numberVariables = variables.length;
 		int assignmentCount = (int)Math.pow(2, numberVariables);
+		String psudoAssignment = null;
 		
 		for (int idx = 0; idx < assignmentCount; idx++) {
 			StringBuilder psudoAssignmentSB = 
 				new StringBuilder(Integer.toBinaryString(idx)).reverse();
 			
-			String psudoAssignment = padRightZeros(psudoAssignmentSB, numberVariables);
+			psudoAssignment = padRightZeros(psudoAssignmentSB, numberVariables);
 			
 			String [] assignmentValues = psudoAssignment.split("");
 			
@@ -86,10 +105,13 @@ public class Controller implements ActionListener{
 			
 			verified = cnfFormula.verify(assignment);
 			if(verified) {
-				System.out.println("Verified with " + psudoAssignment);
+				break;
 			}
-			
+			// Make sure that if no assignment verifies that psudoAssignment returns null
+			psudoAssignment = null;
 		}
+		System.out.println(psudoAssignment);
+		return psudoAssignment;
 	}
 	
 	private String padRightZeros(StringBuilder inputString, int length) {
@@ -104,7 +126,7 @@ public class Controller implements ActionListener{
 	}
 	
 	/**
-	 * Open and read file then build Turing Machine
+	 * Open and read file with valid cnf formula.
 	 * @param file
 	 */
 	public void readFile(File file){
@@ -125,6 +147,18 @@ public class Controller implements ActionListener{
 		};
 	}
 	
+	/**
+	 * Take the incoming cnf formula and parse it for use by the application.
+	 * This method has a O(n^2) with <n> being the input cnf formula:
+	 *	1. split incoming string on ^
+	 *  2. loop step 1 until all elements have been looped.
+	 *    3. split incoming string on v
+	 *    4. loop step 3 until all elements have been looped.
+	 *      5. create literal.
+	 *      6. add literal to Set of literals.
+	 *    7. create clause.
+	 * @param cnfFormulaString
+	 */
 	protected void parseCnfFormulaInput(String cnfFormulaString) {
 		HashSet<String> variablesSet = new HashSet<>();
 		
@@ -160,6 +194,7 @@ public class Controller implements ActionListener{
 		cnfFormula.setClauses( new ArrayList<>(clauses));
 
 		String[] variables = new String[variablesSet.size()];
+		System.out.println(String.join("",variablesSet.toArray(variables)));
 		assignment.setVariables(variablesSet.toArray(variables));
 	} 
 
@@ -170,7 +205,7 @@ public class Controller implements ActionListener{
 	}
 	
 	/**
-	 *
+	 * 
 	 * @return
 	 */
 	public String promptContinue() {
@@ -178,8 +213,24 @@ public class Controller implements ActionListener{
 			+ "Type n to find if formula is satisfiable and exit.");
 	}
 	
+	/**
+	 * Display if the assignment was verified.
+	 * @param verified
+	 */
 	public void showVerified(boolean verified) {
 		pane.showMessageDialog(frame, String.format("The assignment was %sverified.",
 			verified ? "" : "not "));
+	}
+	
+	/**
+	 * Display if the assignment is satisfiable.
+	 * @param inSatisfiable
+	 */
+	public void showSatisfiable(String inSatisfiable) {
+		pane.showMessageDialog(frame, String.format("The cnf formula was %ssatisfiable.%s",
+			inSatisfiable != null ? "" : "not ", 
+			inSatisfiable == null ? "" : 
+				String.format(" %s was the first boolean value to satisfy the formula",
+				inSatisfiable)));
 	}
 }

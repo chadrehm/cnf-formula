@@ -1,7 +1,7 @@
 /**
  * @author Chad Rehm
  * @data 1/11/21
- * @description CS475 Comp Theory assignment 1 - Build Pushdown Automata
+ * @description CS475 Comp Theory assignment 1 - CNF formula reader
  */
 package cs475_sat_rehm;
 

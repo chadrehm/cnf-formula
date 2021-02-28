@@ -28,12 +28,54 @@ public class CS475_SAT_RehmTest {
 	}
 
 	@Test
-	public void test_setClauses() {
+	public void test_setClauses_satisfiable() {
 		Controller controller = new Controller(fc, frame, pane);
 		
 		controller.parseCnfFormulaInput("(x1 v x3 v x4) ^ (nx1 v x3) ^ " +
 			"(nx1 v x4 v nx2) ^ nx3 ^ (x2 v nx4) ");
 		
-		controller.satisfiable();
+		assertNotNull(controller.satisfiable());
+	}
+	
+	@Test
+	public void test_setClauses_not_satisfialbe() {
+		Controller controller = new Controller(fc, frame, pane);
+		
+		controller.parseCnfFormulaInput("(x1) ^ (nx1)");
+		String satisfialbe = controller.satisfiable();
+		
+		assertNull(satisfialbe);
+	}
+	
+	@Test
+	public void test_setClauses_other_variables() {
+		Controller controller = new Controller(fc, frame, pane);
+	
+		controller.parseCnfFormulaInput("(x v nz v y) ^ (nx v ny) ^ (ny)");
+		String satisfialbe = controller.satisfiable();
+		
+		assertNotNull(satisfialbe);
+	}
+	
+	@Test
+	public void test_setClauses_big() {
+		Controller controller = new Controller(fc, frame, pane);
+	
+		controller.parseCnfFormulaInput("(a v nb v c) ^ (na v nd) ^ (c v d v e v f)" +
+			" ^ (nf v ne v g v nh) ^ (a v ng v ne v nt) ^ a");
+		String satisfialbe = controller.satisfiable();
+		
+		assertNotNull(satisfialbe);
+	}
+	
+		@Test
+	public void test_setClauses_slow() {
+		Controller controller = new Controller(fc, frame, pane);
+	
+		controller.parseCnfFormulaInput("a ^ b ^ c ^ d ^ e ^ f ^ g ^ h ^ i ^ u " +
+			"^ j ^ k ^ l ^ m ^ nn ^ p ^ q ^ r ^ s ^ nt)");
+		String satisfialbe = controller.satisfiable();
+		
+		assertNotNull(satisfialbe);
 	}
 }
