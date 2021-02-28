@@ -11,7 +11,7 @@ public class CnfFormula {
 	private ArrayList<Clause> clauses;
 	
 	/**
-	 * Constructor to instantiate new list of clauses
+	 * Constructor to instantiate new list of clauses.
 	 */
 	public CnfFormula() {
 		clauses = new ArrayList<>();
