@@ -6,6 +6,7 @@
 package cs475_sat_rehm;
 
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 public class Assignment {
 	private HashMap<String, Boolean> assignments;
@@ -65,5 +66,11 @@ public class Assignment {
 	 */
 	public void setValue(String var, boolean val) {
 		assignments.put(var, val);
+	}
+	
+	public String toString() {
+		return assignments.keySet().stream().map(assignment -> {
+			return String.format("%s=%s", assignment, assignments.get(assignment));
+		}).collect(Collectors.joining(",", "{", "}"));
 	}
 }

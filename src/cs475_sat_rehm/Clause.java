@@ -61,4 +61,8 @@ public class Clause {
 			literals.stream().map(literal -> literal.toString()).collect(Collectors.toList());
 		return literalsStrings.toArray(new String[literals.size()]);
 	}
+	
+	public String toString() {
+		return literals.toString();
+	}
 }

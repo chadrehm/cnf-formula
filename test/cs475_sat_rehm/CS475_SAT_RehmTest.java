@@ -68,12 +68,22 @@ public class CS475_SAT_RehmTest {
 		assertNotNull(satisfialbe);
 	}
 	
-		@Test
+	@Test
 	public void test_setClauses_slow() {
 		Controller controller = new Controller(fc, frame, pane);
 	
 		controller.parseCnfFormulaInput("a ^ b ^ c ^ d ^ e ^ f ^ g ^ h ^ i ^ u " +
 			"^ j ^ k ^ l ^ m ^ nn ^ p ^ q ^ r ^ s ^ nt)");
+		String satisfialbe = controller.satisfiable();
+		
+		assertNotNull(satisfialbe);
+	}
+	
+		@Test
+	public void test_setClauses_bad_input() {
+		Controller controller = new Controller(fc, frame, pane);
+	
+		controller.parseCnfFormulaInput("(v)(a ^ b v^ c ^ d) ^ )");
 		String satisfialbe = controller.satisfiable();
 		
 		assertNotNull(satisfialbe);

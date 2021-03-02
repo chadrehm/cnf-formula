@@ -8,6 +8,7 @@ package cs475_sat_rehm;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -45,6 +46,7 @@ public class Controller implements ActionListener{
 		} else {
 			System.out.println("Operation is CANCELLED :(");
 		}
+		frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
 	}
 	
 	/**
@@ -57,31 +59,24 @@ public class Controller implements ActionListener{
 		boolean verified = cnfFormula.verify(assignment);
 		showVerified(verified);
 
-		String userContinue = promptContinue();
-		if (userContinue != null && !userContinue.equals("n")) {
-			handleAction();
-		} else {
-			String isSatisfiable = satisfiable();
-			showSatisfiable(isSatisfiable);
-			
-			System.exit(1);
-		}
+		String isSatisfiable = satisfiable();
+		showSatisfiable(isSatisfiable);
 	}
 	
 	/**
 	 * return the first binary input that will satisfy the cnf formula or null.
 	 * This method has a O(2^n).  For every variable the set of assignments that could
-	 * be checked grows 2^n and each assignment has an O(n^2) running time.  Verifying
-	 * assignment m with clauses x:
+	 * be checked grows 2^n and each assignment has an O(m^2) running time.  Verifying
+	 * assignment's clauses m with literals x:
 	 *	1. loop over the assignment count which is 2 to the number of variables.
 	 *		2. build a list of binary inputs to simulate the assignment.
 	 *    3. crate the assignment.
-	 * 4. loop on every assignment n to check the cnf formula.
-	 *		5. call "verify" on each m which will also loop on every x. this step is O(m^2)
-	 *			6. return "true" or "false" from x verify.
-	 *		7. if one x returns false reject.
+	 *    4. loop on every clause m to check the cnf formula.
+	 *		  5. call "verify" on each m which will also loop on every x. this step is O(m^2)
+	 *			  6. return "true" or "false" from x verify.
+	 *		  7. if one x returns false reject.
 	 *		8. if all m are verified to be true accept.
-	 * 9. if one assignment is found to accept the the cnf formula is satisfiable.
+	 *  9. if one assignment is found to accept the the cnf formula is satisfiable.
 	 * @return
 	 */
 	public String satisfiable() {
@@ -110,8 +105,8 @@ public class Controller implements ActionListener{
 			// Make sure that if no assignment verifies that psudoAssignment returns null
 			psudoAssignment = null;
 		}
-		System.out.println(psudoAssignment);
-		return psudoAssignment;
+
+		return psudoAssignment == null ? null : assignment.toString();
 	}
 	
 	private String padRightZeros(StringBuilder inputString, int length) {
@@ -159,21 +154,24 @@ public class Controller implements ActionListener{
 	 *    7. create clause.
 	 * @param cnfFormulaString
 	 */
-	protected void parseCnfFormulaInput(String cnfFormulaString) {
+	protected void parseCnfFormulaInput(String cnfFormulaString){
 		HashSet<String> variablesSet = new HashSet<>();
 		
 		// Parse cnf formula and variables
 		// Split user input on ^ to divide clauses
-		List<Clause> clauses = Arrays.asList(cnfFormulaString.split("\\^"))
-			.stream().map(clauseStr -> {
+		List<Clause> clauses = Arrays.asList(cnfFormulaString.replaceAll("[()\\s]", "")
+			.split("\\^")).stream().map(clauseStr -> {
 
 			// Remove parentheses and space and split on v to divide literals
-			List<Literal> list = Arrays.asList(
-				clauseStr.replaceAll("[()\\s]", "").split("v")).stream().map(literalStr -> {
+			List<Literal> list = Arrays.asList(clauseStr.split("v")).stream()
+				.filter(literalStr -> !literalStr.trim().isEmpty())
+				.map(literalStr -> {
+					
 					Literal literal = new Literal();
-
+					literalStr = literalStr.trim();
+					
 					// Nagation values start with an "n", remove after read.
-					boolean isNegative = literalStr.startsWith("n");
+					boolean isNegative  = literalStr.startsWith("n");
 					if (isNegative) {
 						literalStr = literalStr.substring(1);
 					}
@@ -194,7 +192,7 @@ public class Controller implements ActionListener{
 		cnfFormula.setClauses( new ArrayList<>(clauses));
 
 		String[] variables = new String[variablesSet.size()];
-		System.out.println(String.join("",variablesSet.toArray(variables)));
+
 		assignment.setVariables(variablesSet.toArray(variables));
 	} 
 
@@ -203,15 +201,7 @@ public class Controller implements ActionListener{
 		view.setModel(assignment);
 		view.setVisible(true);
 	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public String promptContinue() {
-		return pane.showInputDialog(frame, "Try another assignment?\n"
-			+ "Type n to find if formula is satisfiable and exit.");
-	}
+
 	
 	/**
 	 * Display if the assignment was verified.
@@ -230,7 +220,7 @@ public class Controller implements ActionListener{
 		pane.showMessageDialog(frame, String.format("The cnf formula was %ssatisfiable.%s",
 			inSatisfiable != null ? "" : "not ", 
 			inSatisfiable == null ? "" : 
-				String.format(" %s was the first boolean value to satisfy the formula",
+				String.format("\n %s was the first assignment to satisfy the formula.",
 				inSatisfiable)));
 	}
 }
